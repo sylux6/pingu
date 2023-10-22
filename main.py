@@ -18,7 +18,12 @@ def download_image(download_path: str, url: str, file_name: str):
 def gif_conversion(file_name: str, output_file: str):
     (
         ffmpeg.input(file_name)
-        .output(output_file, vf="split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", r=10, loop=0)
+        .output(
+            output_file,
+            vf="split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
+            r=10,
+            loop=0,
+        )
         .global_args("-loglevel", "quiet")
         .run()
     )
@@ -36,13 +41,17 @@ if __name__ == "__main__":
 
     if len(stickers):
         path = f"stickers/{title}"
-        os.makedirs(path)
+        os.makedirs(path, exist_ok=True)
 
         with Bar("Processing", max=len(stickers)) as bar:
             for sticker in stickers:
                 sticker_attrs: dict = json.loads(sticker.attrs["data-preview"])
                 sticker_id = sticker_attrs.get("id")
-                sticker_url = sticker_attrs.get("animationUrl", sticker_attrs.get("staticUrl"))
+                sticker_url = (
+                    sticker_attrs.get("animationUrl")
+                    or sticker_attrs.get("popupUrl")
+                    or sticker_attrs.get("staticUrl")
+                )
 
                 download_image(path, sticker_url, sticker_id)
                 gif_conversion(f"{path}/{sticker_id}.png", f"{path}/{sticker_id}.gif")
@@ -52,7 +61,7 @@ if __name__ == "__main__":
 
         print(
             f"Done.\n"
-            f"Please check the \"{path}\" folder.\n"
+            f'Please check the "{path}" folder.\n'
             f"Thank you for using Pingu 🐧"
         )
 
