@@ -1,11 +1,12 @@
+import argparse
+
 from bs4 import BeautifulSoup
-import ffmpeg
 import json
 import os
+from ffmpeg import FFmpeg
 from progress.bar import Bar
 import requests
 import shutil
-import sys
 
 
 def download_image(download_path: str, url: str, file_name: str):
@@ -16,27 +17,29 @@ def download_image(download_path: str, url: str, file_name: str):
 
 
 def gif_conversion(file_name: str, output_file: str):
-    (
-        ffmpeg.input(file_name)
+    ffmpeg_script = (
+        FFmpeg()
+        .option("y")
+        .input(file_name)
         .output(
             output_file,
             vf="split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
             r=10,
             loop=0,
         )
-        .global_args("-loglevel", "quiet")
-        .run()
     )
+    ffmpeg_script.execute()
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.exit("URL argument is missing")
+    parser = argparse.ArgumentParser(description="""Pingu""")
+    parser.add_argument(dest="url", type=str, help='Line url')
+    parser.add_argument('-g', dest="is_github", help='Github Action', action='store_true')
+    args = parser.parse_args()
 
-    URL = sys.argv[1]
-    page = requests.get(URL)
+    page = requests.get(args.url)
     soup = BeautifulSoup(page.content, "html.parser")
-    title = soup.find("p", class_="mdCMN38Item01Ttl").text
+    title = "pingu" if args.is_github else soup.find("p", class_="mdCMN38Item01Ttl").text
     stickers = soup.find_all("li", class_="mdCMN09Li")
 
     if len(stickers):
@@ -48,9 +51,9 @@ if __name__ == "__main__":
                 sticker_attrs: dict = json.loads(sticker.attrs["data-preview"])
                 sticker_id = sticker_attrs.get("id")
                 sticker_url = (
-                    sticker_attrs.get("animationUrl")
-                    or sticker_attrs.get("popupUrl")
-                    or sticker_attrs.get("staticUrl")
+                        sticker_attrs.get("animationUrl")
+                        or sticker_attrs.get("popupUrl")
+                        or sticker_attrs.get("staticUrl")
                 )
 
                 download_image(path, sticker_url, sticker_id)
