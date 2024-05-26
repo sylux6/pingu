@@ -8,6 +8,8 @@ from progress.bar import Bar
 import requests
 import shutil
 
+from slugify import slugify
+
 
 def download_image(download_path: str, url: str, file_name: str):
     res = requests.get(url, stream=True)
@@ -39,7 +41,7 @@ if __name__ == "__main__":
 
     page = requests.get(args.url)
     soup = BeautifulSoup(page.content, "html.parser")
-    title = "pingu" if args.is_github else soup.find("p", class_="mdCMN38Item01Ttl").text
+    title = "pingu" if args.is_github else slugify(soup.find("p", class_="mdCMN38Item01Ttl").text)
     stickers = soup.find_all("li", class_="mdCMN09Li")
 
     if len(stickers):
