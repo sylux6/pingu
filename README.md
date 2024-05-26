@@ -16,8 +16,12 @@ Line stickers downloader
 
 ### Method 2
 
+1. Install ffmpeg and add to your PATH
+2. Install the requirements
+3. Run main.py with Line url
+
 ```
-pip install -r requirements
+pip install -r requirements.txt
 python main.py <URL>
 ```
 
